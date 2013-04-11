@@ -1,7 +1,7 @@
 <?php
-
 /**
- * OS2Web_Print_Send_to_Friend
+ * @file
+ * os2web_print_send_to_friend
  *
  * PHP version 5
  *
@@ -13,9 +13,7 @@
  */
 
 /**
- * Implementation of hook_menu().
- *
- * @return array of links.
+ * Implements hook_menu().
  */
 function os2web_print_send_to_friend_menu() {
   $items = array();
@@ -51,10 +49,10 @@ function os2web_print_send_to_friend_menu() {
 }
 
 /**
- * Creates a light version of the bullet point for printing
+ * Creates a light version of the bullet point for printing.
  *
- * @param int $bullet_point_id bullet point id
- *
+ * @param int $bullet_point_id
+ *   bullet point id
  */
 function os2web_print_send_to_friend_print_bullet_point($bullet_point_id) {
   $bullet_point = node_load($bullet_point_id);
@@ -66,18 +64,19 @@ function os2web_print_send_to_friend_print_bullet_point($bullet_point_id) {
       $html .= '<h3>' . $attachment->title . '</h3>';
       $html .= $attachment->field_bpa_body['und'][0]['value'];
     }
+
   }
   return ('<div class="node" id="content">' . $html . '</div>');
 }
 
 /**
- * Creates a form that allows to send the content of the bullet point to an email addess.
+ * Form callback for send_to_friend_form.
  *
- * @param int $bullet_point_id bullet point id
- *
+ * Creates a form that allows to send the content of the
+ * bullet point to an email addess.
  */
 function os2web_print_send_to_friend_send_to_friend_form($bullet_point_id) {
-  //adding css that tweaks the elements for the modal window
+  // Adding css that tweaks the elements for the modal window.
   drupal_add_css(drupal_get_path('module', 'os2web_print_send_to_friend') . '/css/os2web_print_send_to_friend.css');
 
   drupal_add_js(drupal_get_path('module', 'os2web_print_send_to_friend') . '/js/os2web_print_send_to_friend.js');
@@ -96,57 +95,58 @@ function os2web_print_send_to_friend_send_to_friend_form($bullet_point_id) {
   return '<div class="bullet-point-send-to-friend-form ajax-progress">' . $html . '</div>';
 }
 
+/**
+ * Form access callback.
+ */
 function os2web_print_send_to_friend_bullet_point_access($bullet_point_id) {
   $bullet_point = node_load($bullet_point_id);
-
   if (strcmp($bullet_point->type, 'bullet_point') == 0) {
-    if ($bullet_point->field_bul_point_closed['und'][0]['value'])
+    if ($bullet_point->field_bul_point_closed['und'][0]['value']) {
       return TRUE;
-    else
+    }
+    else {
       return FALSE;
+    }
   }
   return FALSE;
 }
 
 /**
+ * Form callback for os2web_print_send_to_friend_send_to_friend.
+ *
  * Does the actual sending to the provided email
  *
- * @param int    $bullet_point_id bullet point id
- * @patam string $email           email
- *
+ * @param int    $bullet_point_id
+ *   bullet point id
  */
-function os2web_print_send_to_friend_send_to_friend($bullet_point_id){
-    $bullet_point = node_load($bullet_point_id);
-    $subject = 'Dagsorden Punkt: ' . $bullet_point->title;
+function os2web_print_send_to_friend_send_to_friend($bullet_point_id) {
+  $bullet_point = node_load($bullet_point_id);
+  $subject = 'Dagsorden Punkt: ' . $bullet_point->title;
 
-    $name = check_plain(trim($_POST['name']));
-    $message = check_plain(trim($_POST['message']));
-    $to_email = check_plain($_POST['email']);
+  $body = "Hej \n\n" . $_POST['name'] . " har sendt dig et dagsordenspunkt. \n\n";
+  $body .= "Med beskeden:\n" . trim($_POST['message']) . "\n\n";
 
-    $body = "Hej \n\n" . $name ." har sendt dig et dagsordenspunkt. \n\n";
-    $body .= "Med beskeden:\n". $message ."\n\n";
+  $body .= os2web_print_send_to_friend_print_bullet_point($bullet_point_id);
 
-    $body .= os2web_print_send_to_friend_print_bullet_point($bullet_point_id);
+  $from = variable_get('system_mail');
+  $message = array(
+    'id' => 'send_to_friend_',
+    'to' => $_POST['email'],
+    'subject' => $subject,
+    'body' => array($body),
+    'headers' => array(
+      'From' => $from,
+      'Sender' => $from,
+      'Return-Path' => $from,
+      'Content-Type' => 'text/plain; charset=UTF-8;',
+      'Content-Transfer-Encoding' => '8Bit',
+    ),
+  );
+  $system = drupal_mail_system("os2web_print_send_to_friend", "");
 
-    $from = variable_get('system_mail');
-    $message = array(
-      'id' => 'send_to_friend_',
-      'to' => $to_email,
-      'subject' => $subject,
-      'body' => array($body),
-      'headers' => array(
-  'From' => $from,
-  'Sender' => $from,
-  'Return-Path' => $from,
-  'Content-Type' => 'text/plain; charset=UTF-8;',
-  'Content-Transfer-Encoding' => '8Bit',
-      ),
-    );
-    $system = drupal_mail_system("os2web_print_send_to_friend", "");
-
-    // The format function must be called before calling the mail function.
-    $message = $system->format($message);
+  // The format function must be called before calling the mail function.
+  $message = $system->format($message);
 
 
-    $system->mail($message);
+  $system->mail($message);
 }
