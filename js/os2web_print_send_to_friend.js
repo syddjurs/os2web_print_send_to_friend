@@ -1,3 +1,7 @@
+/**
+ * @file
+ * os2web_print_send_to_friend.js
+ */
 jQuery(document).ready(function($) {
   $(".throbber").hide();
   $("#send_to_friend_form").submit(function(e){
