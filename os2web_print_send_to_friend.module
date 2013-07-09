@@ -56,7 +56,7 @@ function os2web_print_send_to_friend_menu() {
  */
 function os2web_print_send_to_friend_print_bullet_point($bullet_point_id) {
   $bullet_point = node_load($bullet_point_id);
-  if (strcmp($bullet_point->type, 'bullet_point') == 0) {
+  if (strcmp($bullet_point->type, 'os2web_meetings_bullet') == 0) {
     $html = '<h1>' . $bullet_point->title . '</h1>';
 
     foreach ($bullet_point->field_ref_attachment['und'] as $attachment_id) {
@@ -100,7 +100,7 @@ function os2web_print_send_to_friend_send_to_friend_form($bullet_point_id) {
  */
 function os2web_print_send_to_friend_bullet_point_access($bullet_point_id) {
   $bullet_point = node_load($bullet_point_id);
-  if (strcmp($bullet_point->type, 'bullet_point') == 0) {
+  if (strcmp($bullet_point->type, 'os2web_meetings_bullet') == 0) {
     if ($bullet_point->field_bul_point_closed['und'][0]['value']) {
       return TRUE;
     }
